@@ -9,8 +9,14 @@ crons = ["*/5 * * * *"]
 
 # 門檻：第一銀行美金即期賣出價 <= LOW 或 >= HIGH 就通知。要改門檻改這裡、push main 就生效
 [vars]
-LOW = "31"
+LOW = "32.8"
 HIGH = "33"
+# email 寄件地址（alert.hunglun.com 已在 Cloudflare Email Sending 啟用，記錄都在該子網域下，不影響 hunglun.com 的 Google 信箱）
+MAIL_FROM = "alert@alert.hunglun.com"
+
+# Cloudflare Email Sending 綁定：Worker 直接寄信到 ALERT_EMAIL（機密）
+[[send_email]]
+name = "EMAIL"
 
 # KV 的 id 由建立腳本補進來（deploy/setup-alert.ps1），不是機密但每個帳號不同
 [[kv_namespaces]]
