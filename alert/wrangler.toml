@@ -15,6 +15,6 @@ HIGH = "33"
 # KV 的 id 由建立腳本補進來（deploy/setup-alert.ps1），不是機密但每個帳號不同
 [[kv_namespaces]]
 binding = "STATE"
-id = "__KV_ID__"
+id = "de7f867c3cc444e08bc4a3c05acceacb"
 
 # 機密（不寫在這裡，因為 repo 是公開的）：NTFY_TOPIC、ALERT_EMAIL，用 deploy/set-ntfy-topic.ps1 設定
