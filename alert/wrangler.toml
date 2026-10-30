@@ -9,7 +9,7 @@ crons = ["*/5 * * * *"]
 
 # 門檻：第一銀行美金即期賣出價 <= LOW 或 >= HIGH 就通知。要改門檻改這裡、push main 就生效
 [vars]
-LOW = "31"
+LOW = "32.8"
 HIGH = "33"
 
 # KV 的 id 由建立腳本補進來（deploy/setup-alert.ps1），不是機密但每個帳號不同
