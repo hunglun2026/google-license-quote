@@ -20,14 +20,24 @@ async function notify(env, { title, body, tags, priority = 'high' }) {
   if (ok === 0) throw new Error('所有通知通道都失敗：' + results.map((r, i) => `${names[i]}=${r.status === 'rejected' ? r.reason.message : '略過'}`).join('；'));
 }
 
+// ntfy.sh 從 Worker 連過去偶爾會 429（限流）或 522（逾時），重試 2 次再放棄；RETRY_MS 讓測試不用真的等
 async function pushNtfy(env, title, body, tags, priority) {
   if (!env.NTFY_TOPIC) throw new Error('沒有設定 NTFY_TOPIC');
-  const res = await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
-    method: 'POST',
-    headers: { Title: b64title(title), Priority: priority, Tags: tags },
-    body,
-  });
-  if (!res.ok) throw new Error('ntfy 回應 HTTP ' + res.status);
+  const wait = Number(env.RETRY_MS ?? 1500);
+  let last;
+  for (let i = 0; i < 3; i++) {
+    if (i) await new Promise((r) => setTimeout(r, wait * i));
+    try {
+      const res = await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
+        method: 'POST',
+        headers: { Title: b64title(title), Priority: priority, Tags: tags },
+        body,
+      });
+      if (res.ok) return;
+      last = new Error('ntfy 回應 HTTP ' + res.status);
+    } catch (e) { last = e; }
+  }
+  throw last;
 }
 
 // 沒設定 EMAIL 綁定、收件人或寄件地址就略過（回傳 'skipped'，不算成功也不算失敗）

@@ -6,21 +6,22 @@ const kv = () => { const m = new Map(); return { get: async (k) => m.get(k) ?? n
 const page = (sell, buy = sell - 0.1) =>
   `<html>Effective Date of Data ： 2026/10/30 10:00:00 &nbsp;USD Spot ${buy.toFixed(5)} ${sell.toFixed(5)} --> &nbsp;USD Cash 32.1 33.1</html>`;
 
-let sent, bankSell, bankFail, ntfyFail;
+let sent, bankSell, bankFail, ntfyFail, ntfyCalls = 0, ntfyFailFirst = 0;
 globalThis.fetch = async (url, opt = {}) => {
   if (String(url).includes('firstbank')) {
     if (bankFail) return new Response('x', { status: 500 });
     return new Response(page(bankSell), { status: 200 });
   }
   if (String(url).startsWith('https://ntfy.sh/')) {
-    if (ntfyFail) return new Response('no', { status: 500 });
+    ntfyCalls++;
+    if (ntfyFail || ntfyFailFirst-- > 0) return new Response('no', { status: 500 });
     sent.push({ url, headers: opt.headers, body: opt.body });
     return new Response('ok');
   }
   throw new Error('未預期的網址 ' + url);
 };
 
-const env = () => ({ LOW: '31', HIGH: '33', ALERT_EMAIL: 'slash@hunglun.com', NTFY_TOPIC: 'test-topic', STATE: kv() });
+const env = () => ({ LOW: '31', HIGH: '33', ALERT_EMAIL: 'slash@hunglun.com', NTFY_TOPIC: 'test-topic', RETRY_MS: '0', STATE: kv() });
 const run = async (e, sell) => { bankSell = sell; bankFail = false; return check(e); };
 const t = (name, fn) => fn().then(() => console.log('OK  ', name)).catch((e) => { console.log('FAIL', name, e.message); process.exitCode = 1; });
 
@@ -132,4 +133,16 @@ await t('ntfy 與 email 都失敗：丟例外且不更新狀態，下一輪重�
   await assert.rejects(() => run(e, 30.5), /所有通知通道都失敗/);
   assert.equal(e.STATE.m.get('state') ?? null, null);
   ntfyFail = false;
+});
+
+await t('ntfy 第一次失敗會自動重試，第二次成功就只推一則', async () => {
+  sent = []; ntfyCalls = 0; ntfyFailFirst = 1; const e = env();
+  const r = await run(e, 30.5);
+  assert.equal(r.notified, true); assert.equal(sent.length, 1); assert.equal(ntfyCalls, 2);
+});
+
+await t('ntfy 一直失敗最多試 3 次', async () => {
+  sent = []; ntfyCalls = 0; ntfyFailFirst = 0; ntfyFail = true; const e = env();
+  await assert.rejects(() => run(e, 30.5));
+  assert.equal(ntfyCalls, 3); ntfyFail = false;
 });
