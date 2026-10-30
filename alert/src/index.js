@@ -10,8 +10,17 @@ function b64title(s) {
   return `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(s)))}?=`;
 }
 
-// ntfy 匿名帳號不能用 Email 標頭寄信（2026-10-30 實測 400），所以推播與 email 分成兩條路
+// 兩條通道各自獨立：ntfy 推播（匿名帳號不能用 Email 標頭寄信，且 Worker 共用出口 IP 會被 ntfy 限流回 429，
+// 2026-10-30 實測）與 Cloudflare Email Sending。只要有一條成功就算通知到；兩條都失敗才丟例外，下一輪重試。
 async function notify(env, { title, body, tags, priority = 'high' }) {
+  const results = await Promise.allSettled([pushNtfy(env, title, body, tags, priority), sendEmail(env, title, body)]);
+  const names = ['ntfy', 'email'];
+  results.forEach((r, i) => { if (r.status === 'rejected') console.error(`${names[i]} 失敗：${r.reason && r.reason.message}`); });
+  const ok = results.filter((r) => r.status === 'fulfilled' && r.value !== 'skipped').length;
+  if (ok === 0) throw new Error('所有通知通道都失敗：' + results.map((r, i) => `${names[i]}=${r.status === 'rejected' ? r.reason.message : '略過'}`).join('；'));
+}
+
+async function pushNtfy(env, title, body, tags, priority) {
   if (!env.NTFY_TOPIC) throw new Error('沒有設定 NTFY_TOPIC');
   const res = await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
     method: 'POST',
@@ -19,17 +28,12 @@ async function notify(env, { title, body, tags, priority = 'high' }) {
     body,
   });
   if (!res.ok) throw new Error('ntfy 回應 HTTP ' + res.status);
-  await sendEmail(env, title, body);
 }
 
-// email 是附加通道：沒設定 EMAIL 綁定就略過；寄失敗只記錄，不能害推播被判定失敗而重複通知
+// 沒設定 EMAIL 綁定、收件人或寄件地址就略過（回傳 'skipped'，不算成功也不算失敗）
 async function sendEmail(env, subject, text) {
-  if (!env.EMAIL || !env.ALERT_EMAIL || !env.MAIL_FROM) return;
-  try {
-    await env.EMAIL.send({ to: env.ALERT_EMAIL, from: env.MAIL_FROM, subject, text });
-  } catch (e) {
-    console.error('email 寄送失敗：' + (e && e.message));
-  }
+  if (!env.EMAIL || !env.ALERT_EMAIL || !env.MAIL_FROM) return 'skipped';
+  await env.EMAIL.send({ to: env.ALERT_EMAIL, from: env.MAIL_FROM, subject, text });
 }
 
 export async function check(env) {

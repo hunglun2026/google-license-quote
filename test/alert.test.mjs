@@ -116,3 +116,20 @@ await t('沒有 EMAIL 綁定時只推播不報錯', async () => {
   const r = await run(e, 33.5);
   assert.equal(r.notified, true); assert.equal(sent.length, 1);
 });
+
+await t('ntfy 被限流（429）但 email 成功：仍算通知到，更新狀態', async () => {
+  sent = []; const e = env(); const mails = []; ntfyFail = true;
+  e.EMAIL = { send: async (m) => void mails.push(m) }; e.MAIL_FROM = 'alert@alert.hunglun.com';
+  const r = await run(e, 30.5);
+  assert.equal(r.notified, true); assert.equal(mails.length, 1);
+  assert.equal(JSON.parse(e.STATE.m.get('state')).zone, 'low');
+  ntfyFail = false;
+});
+
+await t('ntfy 與 email 都失敗：丟例外且不更新狀態，下一輪重試', async () => {
+  sent = []; const e = env(); ntfyFail = true;
+  e.EMAIL = { send: async () => { throw new Error('mail down'); } }; e.MAIL_FROM = 'alert@alert.hunglun.com';
+  await assert.rejects(() => run(e, 30.5), /所有通知通道都失敗/);
+  assert.equal(e.STATE.m.get('state') ?? null, null);
+  ntfyFail = false;
+});
