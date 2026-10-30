@@ -12,5 +12,5 @@ http.createServer(async (req, res) => {
     return;
   }
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-  res.end(await readFile(new URL('../index.html', import.meta.url)));
+  res.end(await readFile(new URL('../public/index.html', import.meta.url)));
 }).listen(port, () => console.log('listening ' + port));
