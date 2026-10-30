@@ -10,12 +10,26 @@ function b64title(s) {
   return `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(s)))}?=`;
 }
 
+// ntfy 匿名帳號不能用 Email 標頭寄信（2026-10-30 實測 400），所以推播與 email 分成兩條路
 async function notify(env, { title, body, tags, priority = 'high' }) {
   if (!env.NTFY_TOPIC) throw new Error('沒有設定 NTFY_TOPIC');
-  const headers = { Title: b64title(title), Priority: priority, Tags: tags };
-  if (env.ALERT_EMAIL) headers.Email = env.ALERT_EMAIL; // ntfy 會同時轉寄 email
-  const res = await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, { method: 'POST', headers, body });
+  const res = await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
+    method: 'POST',
+    headers: { Title: b64title(title), Priority: priority, Tags: tags },
+    body,
+  });
   if (!res.ok) throw new Error('ntfy 回應 HTTP ' + res.status);
+  await sendEmail(env, title, body);
+}
+
+// email 是附加通道：沒設定 EMAIL 綁定就略過；寄失敗只記錄，不能害推播被判定失敗而重複通知
+async function sendEmail(env, subject, text) {
+  if (!env.EMAIL || !env.ALERT_EMAIL || !env.MAIL_FROM) return;
+  try {
+    await env.EMAIL.send({ to: env.ALERT_EMAIL, from: env.MAIL_FROM, subject, text });
+  } catch (e) {
+    console.error('email 寄送失敗：' + (e && e.message));
+  }
 }
 
 export async function check(env) {

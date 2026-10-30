@@ -36,7 +36,7 @@ await t('跌到 31 以下通知一次，內容與 email 標頭正確', async () 
   const r = await run(e, 30.98);
   assert.equal(r.zone, 'low'); assert.equal(sent.length, 1);
   assert.equal(sent[0].url, 'https://ntfy.sh/test-topic');
-  assert.equal(sent[0].headers.Email, 'slash@hunglun.com');
+  assert.equal(sent[0].headers.Email, undefined); // ntfy 匿名不能寄信，不能帶 Email 標頭
   assert.match(sent[0].body, /30\.980/); assert.match(sent[0].body, /低於 31/);
   assert.ok(/^=\?UTF-8\?B\?/.test(sent[0].headers.Title));
 });
@@ -92,4 +92,27 @@ await t('ntfy 失敗時不更新狀態，下一輪會重試', async () => {
 await t('沒設 NTFY_TOPIC 會明確報錯，不默默吞掉', async () => {
   const e = env(); delete e.NTFY_TOPIC;
   await assert.rejects(() => run(e, 30.5), /NTFY_TOPIC/);
+});
+
+await t('有 EMAIL 綁定時另外寄信，內容與收件人正確', async () => {
+  sent = []; const e = env(); const mails = [];
+  e.EMAIL = { send: async (m) => void mails.push(m) }; e.MAIL_FROM = 'alert@hunglun.com';
+  await run(e, 30.5);
+  assert.equal(sent.length, 1); assert.equal(mails.length, 1);
+  assert.equal(mails[0].to, 'slash@hunglun.com'); assert.equal(mails[0].from, 'alert@hunglun.com');
+  assert.match(mails[0].subject, /偏低/); assert.match(mails[0].text, /30\.500/);
+});
+
+await t('email 寄失敗不影響推播與狀態，也不會重複推播', async () => {
+  sent = []; const e = env();
+  e.EMAIL = { send: async () => { throw new Error('boom'); } }; e.MAIL_FROM = 'alert@hunglun.com';
+  const r = await run(e, 30.5);
+  assert.equal(r.notified, true); assert.equal(sent.length, 1);
+  await run(e, 30.4); assert.equal(sent.length, 1);
+});
+
+await t('沒有 EMAIL 綁定時只推播不報錯', async () => {
+  sent = []; const e = env(); // 沒有 EMAIL
+  const r = await run(e, 33.5);
+  assert.equal(r.notified, true); assert.equal(sent.length, 1);
 });
