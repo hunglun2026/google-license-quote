@@ -19,6 +19,7 @@
   .rate-main { display:flex; flex-wrap:wrap; gap:8px 28px; align-items:flex-end; }
   .rate-big { font-size:48px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
   .lbl { font-size:12px; color:var(--mute); }
+  .rate-sell { color:var(--mute); }
   .badge { display:inline-block; font-size:12px; padding:2px 10px; border-radius:99px; font-weight:500; }
   .b-ok { background:#d1fae5; color:var(--ok); } .b-warn { background:#fef3c7; color:var(--warn); } .b-bad { background:#fee2e2; color:var(--bad); } .b-low { background:#e0f2fe; color:var(--low); }
   .zone { margin-top:12px; font-size:15px; padding:10px 14px; border-radius:8px; }
@@ -68,11 +69,11 @@
     <h2>第一銀行 美金牌告（自動更新）</h2>
     <div class="rate-main">
       <div><div class="lbl">買美金的價格（銀行稱「即期賣出」，試算採用這個）</div><div class="rate-big" id="sell">--</div></div>
+      <div><div class="lbl">賣美金的價格（銀行稱「即期買入」，採購用不到）</div><div class="rate-big rate-sell" id="buy">--</div></div>
       <div><span class="badge b-warn" id="status">讀取中</span></div>
     </div>
     <div id="zone" class="zone" hidden></div>
     <div class="meta">
-      <span>賣美金的價格（銀行稱「即期買入」）<b id="buy">--</b></span>
       <span>銀行公告時間（台灣時間）<b id="bankTime">--</b></span>
     </div>
     <div id="rateMsg" class="msg" hidden></div>
