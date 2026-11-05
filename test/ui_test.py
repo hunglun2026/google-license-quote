@@ -23,6 +23,7 @@ with sync_playwright() as p:
     sell = float(pg.inner_text("#sell"))
     check("狀態顯示", pg.inner_text("#status") in ("即時",) or "未更新" in pg.inner_text("#status"), pg.inner_text("#status"))
 
+    pg.click("#adv > summary"); pg.click("#detail > summary")  # 進階條件與明細預設收起，先展開
     pg.fill("#unit", "100"); pg.fill("#qty", "1000"); pg.fill("#buffer", "0.3")
     pg.fill("#fee", "500"); pg.fill("#markup", "10"); pg.check("#tax")
     usd = 100 * 1000
@@ -35,6 +36,19 @@ with sync_playwright() as p:
     check("營業稅", abs(got["rTax"] - round(net * 0.05)) <= 1)
     check("最終報價", abs(got["rQuote"] - round(quote)) <= 1, f'{got["rQuote"]} vs {quote:.1f}')
     check("每單位", abs(got["rPer"] - round(quote / 1000)) <= 1)
+    check("大數字報價與明細一致", pg.inner_text("#sQuote") == pg.inner_text("#rQuote"), pg.inner_text("#sQuote"))
+    check("大數字成本與明細一致", pg.inner_text("#sCost") == pg.inner_text("#rCost"))
+
+    # 走勢圖與警示區（dev-server 的假資料：30 天，門檻 31／32.5）
+    pg.wait_for_selector("svg.chart")
+    check("走勢圖有畫出", pg.locator("svg.chart circle").count() == 30, pg.locator("svg.chart circle").count())
+    check("走勢圖有門檻虛線", "偏高 32.5" in pg.text_content("svg.chart") and "偏低 31" in pg.text_content("svg.chart"))
+    check("統計列", "共 30 天" in pg.inner_text("#stats"), pg.inner_text("#stats"))
+    pg.click("[data-range='90']")
+    check("切換範圍不壞", pg.locator("svg.chart circle").count() == 30)
+    zone = pg.inner_text("#zone")
+    exp = "偏高" if sell >= 32.5 else ("偏低" if sell <= 31 else "正常範圍")
+    check("警示區文字", zone.startswith(exp), zone)
 
     # 手動議價匯率
     pg.select_option("#mode", "manual"); pg.fill("#manual", "32")
@@ -58,6 +72,7 @@ with sync_playwright() as p:
     pg2.route("**/api/rate", lambda r: r.fulfill(status=502, content_type="application/json", body='{"ok":false,"error":"測試斷線"}'))
     pg2.goto(URL)
     pg2.wait_for_function("document.getElementById('status').textContent !== '讀取中'")
+    pg2.click("#detail > summary")
     pg2.fill("#unit", "100"); pg2.fill("#qty", "10")
     check("斷線顯示錯誤", pg2.inner_text("#status") == "無法取得牌告", pg2.inner_text("#status"))
     check("斷線不算成本", pg2.inner_text("#rCost") == "--", pg2.inner_text("#rCost"))
@@ -70,6 +85,24 @@ with sync_playwright() as p:
     pg3.goto(URL)
     pg3.wait_for_function("document.getElementById('status').textContent !== '讀取中'")
     check("過期提示", "未更新" in pg3.inner_text("#status"), pg3.inner_text("#status"))
+
+    # 走勢資料讀不到：顯示說明、不影響試算
+    pg4 = b.new_page()
+    pg4.route("**/api/history*", lambda r: r.fulfill(status=503, content_type="application/json", body='{"ok":false,"error":"還沒有走勢資料"}'))
+    pg4.goto(URL)
+    pg4.wait_for_function("document.getElementById('sell').textContent !== '--'")
+    pg4.wait_for_function("document.getElementById('chartBox').textContent.includes('暫時讀不到')")
+    pg4.fill("#unit", "10"); pg4.fill("#qty", "10")
+    check("走勢失敗仍可試算", pg4.inner_text("#sCost") != "--", pg4.inner_text("#sCost"))
+    check("走勢失敗不顯示警示區", pg4.is_hidden("#zone"))
+
+    # 走勢資料只有 1 天：不畫圖、顯示累積中
+    pg5 = b.new_page()
+    pg5.route("**/api/history*", lambda r: r.fulfill(content_type="application/json",
+        body='{"ok":true,"cfg":{"low":31,"high":32.5},"days":[{"date":"2026-11-04","o":32.8,"h":32.9,"l":32.7,"c":32.8,"t":"x"}]}'))
+    pg5.goto(URL)
+    pg5.wait_for_function("document.getElementById('chartBox').textContent.includes('才剛開始累積')")
+    check("只有 1 天不畫圖", pg5.locator("svg.chart").count() == 0)
 
     pg.screenshot(path=os.path.join(tempfile.gettempdir(), "gq_shot.png"), full_page=True)
     check("無 JS 錯誤", not errs, errs)

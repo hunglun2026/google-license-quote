@@ -8,34 +8,55 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#f4f6f9; --card:#fff; --ink:#1e293b; --mute:#64748b; --line:#e2e8f0; --brand:#1d4ed8; --warn:#b45309; --bad:#b91c1c; --ok:#047857; }
+  :root { --bg:#f4f6f9; --card:#fff; --ink:#1e293b; --mute:#64748b; --line:#e2e8f0; --brand:#1d4ed8; --warn:#b45309; --bad:#b91c1c; --ok:#047857; --low:#0369a1; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:'Noto Sans TC',sans-serif; line-height:1.6; }
-  .wrap { max-width:960px; margin:0 auto; padding:24px 16px 48px; }
+  .wrap { max-width:880px; margin:0 auto; padding:24px 16px 48px; }
   h1 { font-size:20px; margin:0 0 4px; }
   .sub { color:var(--mute); font-size:13px; margin:0 0 20px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
   .card h2 { font-size:15px; margin:0 0 12px; }
-  .rate-main { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; }
-  .rate-big { font-size:40px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .rate-main { display:flex; flex-wrap:wrap; gap:8px 28px; align-items:flex-end; }
+  .rate-big { font-size:48px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
   .lbl { font-size:12px; color:var(--mute); }
   .badge { display:inline-block; font-size:12px; padding:2px 10px; border-radius:99px; font-weight:500; }
-  .b-ok { background:#d1fae5; color:var(--ok); } .b-warn { background:#fef3c7; color:var(--warn); } .b-bad { background:#fee2e2; color:var(--bad); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .b-ok { background:#d1fae5; color:var(--ok); } .b-warn { background:#fef3c7; color:var(--warn); } .b-bad { background:#fee2e2; color:var(--bad); } .b-low { background:#e0f2fe; color:var(--low); }
+  .zone { margin-top:12px; font-size:15px; padding:10px 14px; border-radius:8px; }
+  .meta { display:flex; flex-wrap:wrap; gap:4px 24px; margin-top:12px; font-size:13px; color:var(--mute); }
+  .meta b { color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
   label { display:block; font-size:12px; color:var(--mute); margin-bottom:4px; }
-  input[type=number], select { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:15px; background:#fff; }
-  input:focus, select:focus { outline:2px solid var(--brand); border-color:var(--brand); }
+  input[type=number], select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:17px; background:#fff; }
+  input:focus, select:focus, summary:focus-visible, button:focus-visible { outline:2px solid var(--brand); border-color:var(--brand); }
   .chk { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink); margin:0; }
+  .chk input { width:18px; height:18px; }
   .hint { font-size:12px; color:var(--mute); margin-top:4px; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
+  details { margin-top:16px; }
+  summary { cursor:pointer; font-size:14px; color:var(--brand); font-weight:500; padding:4px 0; }
+  details > .grid { margin-top:12px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .tile { border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .tile .v { font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.2; margin-top:2px; }
+  .tile.main { background:#eff6ff; border-color:#bfdbfe; } .tile.main .v { color:var(--brand); }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:8px; }
   td { padding:9px 0; border-bottom:1px solid var(--line); }
   td:last-child { text-align:right; font-variant-numeric:tabular-nums; font-weight:500; }
   tr.total td { font-weight:700; font-size:16px; border-bottom:0; color:var(--brand); }
   button { font:inherit; cursor:pointer; border-radius:8px; padding:9px 16px; border:1px solid var(--line); background:#fff; }
   button.primary { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:500; }
   button:disabled { opacity:.5; cursor:not-allowed; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { border:0; border-radius:0; padding:5px 14px; font-size:13px; }
+  .seg button[aria-pressed=true] { background:var(--brand); color:#fff; }
+  .chart-head { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .chart-head h2 { margin:0; }
+  .stats { display:flex; flex-wrap:wrap; gap:4px 24px; margin-top:10px; font-size:13px; color:var(--mute); }
+  .stats b { color:var(--ink); font-variant-numeric:tabular-nums; }
+  svg.chart { width:100%; height:auto; display:block; }
+  svg.chart text { font-size:11px; fill:#64748b; font-family:inherit; }
   .msg { font-size:13px; padding:10px 12px; border-radius:8px; margin-top:12px; }
   .foot { font-size:12px; color:var(--mute); margin-top:24px; }
+  @media (max-width:480px) { .rate-big { font-size:42px; } .tile .v { font-size:24px; } .card { padding:16px; } }
 </style>
 </head>
 <body>
@@ -47,9 +68,12 @@
     <h2>第一銀行 美金牌告（自動更新）</h2>
     <div class="rate-main">
       <div><div class="lbl">即期賣出（公司買美金，採用這個）</div><div class="rate-big" id="sell">--</div></div>
-      <div><div class="lbl">即期買入</div><div style="font-size:20px;font-weight:500" id="buy">--</div></div>
-      <div><div class="lbl">銀行公告時間（台灣時間）</div><div style="font-size:15px" id="bankTime">--</div></div>
       <div><span class="badge b-warn" id="status">讀取中</span></div>
+    </div>
+    <div id="zone" class="zone" hidden></div>
+    <div class="meta">
+      <span>即期買入 <b id="buy">--</b></span>
+      <span>銀行公告時間（台灣時間）<b id="bankTime">--</b></span>
     </div>
     <div id="rateMsg" class="msg" hidden></div>
   </section>
@@ -59,46 +83,78 @@
     <div class="grid">
       <div><label for="unit">授權單價（美金 / 每單位）</label><input type="number" id="unit" min="0" step="any" inputmode="decimal"></div>
       <div><label for="qty">數量</label><input type="number" id="qty" min="0" step="1" inputmode="numeric"></div>
-      <div><label for="mode">匯率來源</label>
-        <select id="mode"><option value="auto">第一銀行牌告（自動）</option><option value="manual">手動輸入議價匯率</option></select></div>
-      <div id="manualBox" hidden><label for="manual">議價匯率（台幣 / 美金）</label><input type="number" id="manual" min="0" step="any" inputmode="decimal"></div>
-      <div><label for="buffer">匯損緩衝（每 1 美金加幾元台幣）</label><input type="number" id="buffer" min="0" step="any" value="0" inputmode="decimal">
-        <div class="hint">報價到付款之間匯率可能上漲，公司自行決定加多少</div></div>
-      <div><label for="fee">電匯手續費（台幣，整筆）</label><input type="number" id="fee" min="0" step="any" value="0" inputmode="decimal"></div>
-      <div><label for="markup">加成比例（%）</label><input type="number" id="markup" min="0" step="any" value="0" inputmode="decimal"></div>
-      <div style="display:flex;align-items:flex-end"><label class="chk"><input type="checkbox" id="tax"> 報價加 5% 營業稅</label></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:10px"><label class="chk"><input type="checkbox" id="tax"> 報價加 5% 營業稅</label></div>
     </div>
+    <details id="adv">
+      <summary>進階條件（議價匯率、匯損緩衝、手續費、加成）</summary>
+      <div class="grid">
+        <div><label for="mode">匯率來源</label>
+          <select id="mode"><option value="auto">第一銀行牌告（自動）</option><option value="manual">手動輸入議價匯率</option></select></div>
+        <div id="manualBox" hidden><label for="manual">議價匯率（台幣 / 美金）</label><input type="number" id="manual" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="buffer">匯損緩衝（每 1 美金加幾元台幣）</label><input type="number" id="buffer" min="0" step="any" inputmode="decimal">
+          <div class="hint">報價到付款之間匯率可能上漲，公司自行決定加多少</div></div>
+        <div><label for="fee">電匯手續費（台幣，整筆）</label><input type="number" id="fee" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="markup">加成比例（%）</label><input type="number" id="markup" min="0" step="any" inputmode="decimal"></div>
+      </div>
+    </details>
   </section>
 
   <section class="card">
     <h2>試算結果</h2>
-    <table>
-      <tr><td>採購總額（美金）</td><td id="rUsd">--</td></tr>
-      <tr><td>採用匯率（台幣 / 美金）</td><td id="rRate">--</td></tr>
-      <tr><td>含緩衝的美金成本（台幣）</td><td id="rFx">--</td></tr>
-      <tr><td>電匯手續費（台幣）</td><td id="rFee">--</td></tr>
-      <tr><td><b>採購成本合計（台幣）</b></td><td id="rCost"><b>--</b></td></tr>
-      <tr><td>加成金額（台幣）</td><td id="rMk">--</td></tr>
-      <tr><td>未稅報價（台幣）</td><td id="rNet">--</td></tr>
-      <tr><td>營業稅（台幣）</td><td id="rTax">--</td></tr>
-      <tr class="total"><td>給教育單位的報價（台幣）</td><td id="rQuote">--</td></tr>
-      <tr><td>每單位報價（台幣）</td><td id="rPer">--</td></tr>
-    </table>
+    <div class="tiles">
+      <div class="tile"><div class="lbl">採購成本合計（台幣）</div><div class="v" id="sCost">--</div></div>
+      <div class="tile main"><div class="lbl">給教育單位的報價（台幣）</div><div class="v" id="sQuote">--</div></div>
+      <div class="tile"><div class="lbl">每單位報價（台幣）</div><div class="v" id="sPer">--</div></div>
+    </div>
+    <details id="detail">
+      <summary>看計算明細</summary>
+      <table>
+        <tr><td>採購總額（美金）</td><td id="rUsd">--</td></tr>
+        <tr><td>採用匯率（台幣 / 美金）</td><td id="rRate">--</td></tr>
+        <tr><td>含緩衝的美金成本（台幣）</td><td id="rFx">--</td></tr>
+        <tr><td>電匯手續費（台幣）</td><td id="rFee">--</td></tr>
+        <tr><td><b>採購成本合計（台幣）</b></td><td id="rCost"><b>--</b></td></tr>
+        <tr><td>加成金額（台幣）</td><td id="rMk">--</td></tr>
+        <tr><td>未稅報價（台幣）</td><td id="rNet">--</td></tr>
+        <tr><td>營業稅（台幣）</td><td id="rTax">--</td></tr>
+        <tr class="total"><td>給教育單位的報價（台幣）</td><td id="rQuote">--</td></tr>
+        <tr><td>每單位報價（台幣）</td><td id="rPer">--</td></tr>
+      </table>
+    </details>
     <div style="margin-top:16px"><button class="primary" id="exportBtn" disabled>匯出 .xlsx 報價試算</button></div>
   </section>
 
-  <p class="foot">匯率每 60 秒自動向第一銀行更新。實際入帳與扣款匯率以銀行成交為準；若與銀行議價，請改用「手動輸入議價匯率」。加成與營業稅的處理由公司自行決定，本工具只做試算。</p>
+  <section class="card">
+    <div class="chart-head">
+      <h2>美金賣出價走勢（第一銀行）</h2>
+      <div class="seg" role="group" aria-label="走勢範圍">
+        <button type="button" data-range="30" aria-pressed="true">30 天</button>
+        <button type="button" data-range="90" aria-pressed="false">90 天</button>
+        <button type="button" data-range="400" aria-pressed="false">全部</button>
+      </div>
+    </div>
+    <div id="chartBox"><p class="hint">讀取中…</p></div>
+    <div class="stats" id="stats" hidden></div>
+  </section>
+
+  <p class="foot">匯率每 60 秒自動向第一銀行更新。實際入帳與扣款匯率以銀行成交為準；若與銀行議價，請在「進階條件」改用「手動輸入議價匯率」。加成與營業稅的處理由公司自行決定，本工具只做試算。走勢圖的資料是從開始記錄那天起每天累積，銀行沒有提供更早的歷史。</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const STALE_MIN = 30; // 銀行公告時間超過幾分鐘視為過期
+// 公司預設值：打開頁面時自動帶入，想改預設就改這裡（0 代表不加）
+const DEFAULTS = { markup: 0, buffer: 0, fee: 0, tax: false };
 let bank = null;      // 最近一次成功取得的牌告
 let calc = null;      // 最近一次試算結果
+let cfg = null;       // 警示門檻 { low, high }，由走勢 API 帶回，與警示 Worker 用同一組數字
+let histDays = [];    // 每日牌價
+let range = 30;
 
 const money = (n, d = 0) => Number(n).toLocaleString('zh-TW', { minimumFractionDigits: d, maximumFractionDigits: d });
 const num = (id) => { const v = parseFloat($(id).value); return Number.isFinite(v) && v >= 0 ? v : 0; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // 銀行時間是台灣時間 "YYYY/MM/DD hh:mm:ss"，換成毫秒再比較
 function bankAgeMin(s) {
@@ -110,6 +166,17 @@ function setStatus(kind, text) {
   const el = $('status');
   el.className = 'badge ' + { ok: 'b-ok', warn: 'b-warn', bad: 'b-bad' }[kind];
   el.textContent = text;
+}
+
+// 牌價落在哪一區：高於上限＝成本偏高，低於下限＝適合買匯
+function renderZone() {
+  const el = $('zone');
+  if (!bank || !cfg) { el.hidden = true; return; }
+  const s = bank.spotSell;
+  el.hidden = false;
+  if (s >= cfg.high) { el.className = 'zone b-bad'; el.textContent = '偏高：已高於 ' + cfg.high + '，台幣偏弱，採購成本變高，報價請留意匯損。'; }
+  else if (s <= cfg.low) { el.className = 'zone b-low'; el.textContent = '偏低：已低於 ' + cfg.low + '，台幣偏強，買美金成本較低，可考慮分批買匯。'; }
+  else { el.className = 'zone b-ok'; el.textContent = '正常範圍（' + cfg.low + ' ～ ' + cfg.high + '）。超出範圍時系統會自動通知。'; }
 }
 
 async function loadRate() {
@@ -137,8 +204,9 @@ async function loadRate() {
     $('sell').textContent = '--'; $('buy').textContent = '--'; $('bankTime').textContent = '--';
     setStatus('bad', '無法取得牌告');
     msg.hidden = false; msg.className = 'msg b-bad';
-    msg.textContent = '目前抓不到第一銀行牌告（' + e.message + '）。自動匯率停用，請改用「手動輸入議價匯率」。';
+    msg.textContent = '目前抓不到第一銀行牌告（' + e.message + '）。自動匯率停用，請在「進階條件」改用「手動輸入議價匯率」。';
   }
+  renderZone();
   recalc();
 }
 
@@ -158,16 +226,83 @@ function recalc() {
   const per = num('qty') > 0 ? quote / num('qty') : 0;
 
   const ready = rate > 0 && usd > 0;
-  const show = (id, v, d = 0) => { $(id).textContent = ready ? v : '--'; };
+  const show = (id, v) => { $(id).textContent = ready ? v : '--'; };
   show('rUsd', money(usd, 2)); show('rRate', rate.toFixed(3) + (buffer ? '（另加緩衝 ' + buffer + '）' : ''));
   show('rFx', money(fx)); show('rFee', money(fee)); show('rCost', money(cost));
   show('rMk', money(mkAmt)); show('rNet', money(net)); show('rTax', money(tax));
   show('rQuote', money(quote)); show('rPer', money(per));
+  show('sCost', money(cost)); show('sQuote', money(quote)); show('sPer', money(per));
   $('rCost').style.fontWeight = '700';
 
   calc = ready ? { usd, rate, buffer, fee, mk: mk * 100, taxOn: $('tax').checked, fx, cost, mkAmt, net, tax, quote, per, manual } : null;
   $('exportBtn').disabled = !calc;
 }
+
+// ---- 走勢圖：手繪 SVG，不載圖表套件。每天一根高低線＋收盤價折線，門檻畫虛線 ----
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/history?days=400', { cache: 'no-store' });
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || '取得失敗');
+    histDays = d.days; cfg = d.cfg;
+  } catch (e) {
+    histDays = [];
+    $('chartBox').innerHTML = '<p class="hint">走勢資料暫時讀不到（' + esc(e.message) + '），不影響上面的試算。</p>';
+    $('stats').hidden = true;
+    return;
+  }
+  renderZone();
+  drawChart();
+}
+
+function drawChart() {
+  const days = histDays.slice(-range), box = $('chartBox'), stats = $('stats');
+  if (days.length < 2) {
+    box.innerHTML = '<p class="hint">走勢資料才剛開始累積（目前 ' + days.length + ' 天），滿 2 天後會畫出圖。</p>';
+    stats.hidden = true;
+    return;
+  }
+  const W = Math.max(300, box.clientWidth || 640), H = W < 500 ? 220 : 240, L = 46, R = 66, T = 14, B = 30; // 依容器寬度畫，字在手機上才不會縮小；右側留白放門檻標籤
+  let lo = Math.min(...days.map((d) => d.l)), hi = Math.max(...days.map((d) => d.h));
+  if (cfg) [cfg.low, cfg.high].forEach((v) => { if (v > lo - 1 && v < hi + 1) { lo = Math.min(lo, v); hi = Math.max(hi, v); } });
+  const pad = (hi - lo) * 0.12 || 0.1; lo -= pad; hi += pad;
+  const x = (i) => L + (W - L - R) * (i / (days.length - 1));
+  const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="美金賣出價走勢圖">';
+  for (let k = 0; k <= 3; k++) { // 橫向格線與刻度
+    const v = lo + (hi - lo) * (k / 3), yy = y(v).toFixed(1);
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e2e8f0"/><text x="' + (L - 6) + '" y="' + (+yy + 4) + '" text-anchor="end">' + v.toFixed(2) + '</text>';
+  }
+  if (cfg) [['low', '#0369a1', '偏低'], ['high', '#b91c1c', '偏高']].forEach(([k, color, name]) => {
+    const v = cfg[k]; if (v < lo || v > hi) return;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="' + color + '" stroke-dasharray="5 4"/>' +
+      '<text x="' + (W - R + 5) + '" y="' + (y(v) + 4).toFixed(1) + '" style="fill:' + color + '">' + name + ' ' + v + '</text>';
+  });
+  days.forEach((d, i) => { // 當天最高到最低
+    s += '<line x1="' + x(i).toFixed(1) + '" x2="' + x(i).toFixed(1) + '" y1="' + y(d.h).toFixed(1) + '" y2="' + y(d.l).toFixed(1) + '" stroke="#bfdbfe" stroke-width="4" stroke-linecap="round"/>';
+  });
+  s += '<polyline fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round" points="' + days.map((d, i) => x(i).toFixed(1) + ',' + y(d.c).toFixed(1)).join(' ') + '"/>';
+  days.forEach((d, i) => { // 滑過或點一下看當天數字
+    s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(d.c).toFixed(1) + '" r="' + (days.length > 60 ? 2 : 3.5) + '" fill="#1d4ed8"><title>' +
+      esc(d.date) + '　收 ' + d.c.toFixed(3) + '（高 ' + d.h.toFixed(3) + '／低 ' + d.l.toFixed(3) + '）</title></circle>';
+  });
+  s += '<text x="' + L + '" y="' + (H - 8) + '">' + esc(days[0].date.slice(5).replace('-', '/')) + '</text>' +
+    '<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">' + esc(days[days.length - 1].date.slice(5).replace('-', '/')) + '</text></svg>';
+  box.innerHTML = s;
+
+  const hiV = Math.max(...days.map((d) => d.h)), loV = Math.min(...days.map((d) => d.l));
+  const avg = days.reduce((a, d) => a + d.c, 0) / days.length;
+  stats.hidden = false;
+  stats.innerHTML = '<span>期間最高 <b>' + hiV.toFixed(3) + '</b></span><span>期間最低 <b>' + loV.toFixed(3) + '</b></span>' +
+    '<span>收盤平均 <b>' + avg.toFixed(3) + '</b></span><span>共 <b>' + days.length + '</b> 天（' + esc(days[0].date) + ' 起）</span>';
+}
+
+let rsz; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(drawChart, 200); });
+document.querySelectorAll('[data-range]').forEach((b) => b.addEventListener('click', () => {
+  range = Number(b.dataset.range);
+  document.querySelectorAll('[data-range]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  drawChart();
+}));
 
 function exportXlsx() {
   if (!calc) return;
@@ -200,10 +335,14 @@ function exportXlsx() {
   XLSX.writeFile(wb, '報價試算_' + now.toISOString().slice(0, 10) + '.xlsx');
 }
 
+$('markup').value = DEFAULTS.markup; $('buffer').value = DEFAULTS.buffer; $('fee').value = DEFAULTS.fee; $('tax').checked = DEFAULTS.tax;
+if (DEFAULTS.markup || DEFAULTS.buffer || DEFAULTS.fee) $('adv').open = true; // 有預設加成就展開，讓人看得到
 ['unit', 'qty', 'mode', 'manual', 'buffer', 'fee', 'markup', 'tax'].forEach((id) => $(id).addEventListener('input', recalc));
 $('exportBtn').addEventListener('click', exportXlsx);
 loadRate();
+loadHistory();
 setInterval(loadRate, 60000);
+setInterval(loadHistory, 600000);
 </script>
 </body>
 </html>

@@ -1,0 +1,10 @@
+# Cloudflare Pages 設定（專案 google-license-quote）。有這個檔，Pages 會以它為準，後台的綁定設定會變唯讀。
+# 警示 Worker 的設定在 alert/wrangler.toml，兩邊互不影響。
+name = "google-license-quote"
+pages_build_output_dir = "public"
+compatibility_date = "2026-08-01"
+
+# 走勢資料庫：與警示 Worker 的 STATE 是同一個 KV（Worker 寫、這裡唯讀使用）
+[[kv_namespaces]]
+binding = "HISTORY"
+id = "de7f867c3cc444e08bc4a3c05acceacb"

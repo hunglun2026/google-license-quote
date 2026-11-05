@@ -2,6 +2,7 @@
 // 狀態存 KV，只有「進入」警示區才通知一次；連續抓不到 3 次也通知一次（銀行改版會讓警示默默失效）。
 import { SOURCE_URL, parseFirstBank } from '../../functions/_lib/parse.js';
 import { decide, buildMessage } from './logic.js';
+import { updateHistory } from './history.js';
 
 const FAIL_LIMIT = 3;
 
@@ -46,6 +47,11 @@ async function sendEmail(env, subject, text) {
   await env.EMAIL.send({ to: env.ALERT_EMAIL, from: env.MAIL_FROM, subject, text });
 }
 
+async function saveHistory(env, d, low, high) {
+  const { hist, changed } = updateHistory(JSON.parse((await env.STATE.get('hist')) || 'null'), d, low, high);
+  if (changed) await env.STATE.put('hist', JSON.stringify(hist));
+}
+
 export async function check(env) {
   const low = Number(env.LOW), high = Number(env.HIGH);
   const st = JSON.parse((await env.STATE.get('state')) || '{}');
@@ -66,6 +72,8 @@ export async function check(env) {
     await env.STATE.put('state', JSON.stringify(st));
     return { ok: false, error: e.message };
   }
+  // 走勢紀錄失敗不能影響警示，只記錄錯誤
+  await saveHistory(env, d, low, high).catch((e) => console.error('走勢紀錄失敗：' + e.message));
   const r = decide(d.spotSell, low, high, st.zone);
   if (r.notify) await notify(env, buildMessage(r.zone, d, low, high));
   // 通知成功才更新狀態；通知失敗會丟例外，下一輪會再試

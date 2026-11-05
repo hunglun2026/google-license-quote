@@ -146,3 +146,42 @@ await t('ntfy 一直失敗最多試 3 次', async () => {
   await assert.rejects(() => run(e, 30.5));
   assert.equal(ntfyCalls, 3); ntfyFail = false;
 });
+
+// ---- 每日牌價紀錄 ----
+const hist = (e) => JSON.parse(e.STATE.m.get('hist'));
+
+await t('走勢紀錄：同一天累積開高低收，並存下門檻', async () => {
+  sent = []; const e = env();
+  bankSell = 32.7; bankFail = false; await check(e);
+  assert.deepEqual(hist(e).days['2026-10-30'], { o: 32.7, h: 32.7, l: 32.7, c: 32.7, t: '2026/10/30 10:00:00' });
+  assert.deepEqual(hist(e).cfg, { low: 31, high: 33 });
+});
+
+await t('走勢紀錄：銀行時間沒變不重複寫入', async () => {
+  const e = env(); let puts = 0; const put = e.STATE.put;
+  e.STATE.put = async (k, v) => { if (k === 'hist') puts++; return put(k, v); };
+  await run(e, 32.7); await run(e, 32.9); await run(e, 32.1);
+  assert.equal(puts, 1);
+  assert.equal(hist(e).days['2026-10-30'].c, 32.7);
+});
+
+await t('走勢紀錄：記錄失敗不影響警示', async () => {
+  sent = []; const e = env(); const get = e.STATE.get;
+  e.STATE.get = async (k) => { if (k === 'hist') throw new Error('kv down'); return get(k); };
+  const r = await run(e, 30.5);
+  assert.equal(r.notified, true); assert.equal(sent.length, 1);
+});
+
+import { updateHistory } from '../alert/src/history.js';
+await t('走勢紀錄：同日更新高低收、跨日新增、超過保留天數會刪最舊', async () => {
+  const a = (bt, s) => ({ bankTime: bt, spotSell: s });
+  let h = updateHistory(null, a('2026/11/04 09:00:00', 32.8), 31, 32.5).hist;
+  h = updateHistory(h, a('2026/11/04 10:00:00', 33.0), 31, 32.5).hist;
+  h = updateHistory(h, a('2026/11/04 11:00:00', 32.6), 31, 32.5).hist;
+  assert.deepEqual(h.days['2026-11-04'], { o: 32.8, h: 33.0, l: 32.6, c: 32.6, t: '2026/11/04 11:00:00' });
+  h = updateHistory(h, a('2026/11/05 09:00:00', 32.5), 31, 32.5).hist;
+  assert.equal(Object.keys(h.days).length, 2);
+  const big = { days: {} };
+  for (let i = 0; i < 405; i++) big.days['2025-' + String(i).padStart(4, '0')] = { o: 1, h: 1, l: 1, c: 1, t: 'x' };
+  assert.equal(Object.keys(updateHistory(big, a('2026/11/05 09:00:00', 32), 31, 32.5).hist.days).length, 400);
+});
