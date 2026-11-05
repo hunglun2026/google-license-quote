@@ -21,7 +21,7 @@ with sync_playwright() as p:
     pg.goto(URL)
     pg.wait_for_function("document.getElementById('sell').textContent !== '--'")
     sell = float(pg.inner_text("#sell"))
-    check("狀態顯示", pg.inner_text("#status") in ("即時",) or "未更新" in pg.inner_text("#status"), pg.inner_text("#status"))
+    check("狀態顯示", pg.inner_text("#status").startswith("已更新") or "未更新" in pg.inner_text("#status"), pg.inner_text("#status"))
 
     pg.click("#adv > summary"); pg.click("#detail > summary")  # 進階條件與明細預設收起，先展開
     pg.fill("#unit", "100"); pg.fill("#qty", "1000"); pg.fill("#buffer", "0.3")

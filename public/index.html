@@ -138,7 +138,7 @@
     <div class="stats" id="stats" hidden></div>
   </section>
 
-  <p class="foot">匯率每 60 秒自動向第一銀行更新。實際入帳與扣款匯率以銀行成交為準；若與銀行議價，請在「進階條件」改用「手動輸入議價匯率」。加成與營業稅的處理由公司自行決定，本工具只做試算。走勢圖的資料是從開始記錄那天起每天累積，銀行沒有提供更早的歷史。</p>
+  <p class="foot">匯率每 20 秒自動重新讀取；第一銀行本身約每分鐘才更新一次牌價，所以畫面最多會比銀行晚一分多鐘。實際入帳與扣款匯率以銀行成交為準；若與銀行議價，請在「進階條件」改用「手動輸入議價匯率」。加成與營業稅的處理由公司自行決定，本工具只做試算。走勢圖的資料是從開始記錄那天起每天累積，銀行沒有提供更早的歷史。</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -196,7 +196,7 @@ async function loadRate() {
       msg.hidden = false; msg.className = 'msg b-warn';
       msg.textContent = '銀行公告時間距現在超過 ' + STALE_MIN + ' 分鐘（可能休市或銀行尚未更新），報價前請與銀行確認匯率。';
     } else {
-      setStatus('ok', '即時');
+      setStatus('ok', '已更新 ' + new Date().toLocaleTimeString('zh-TW', { hour12: false }));
       msg.hidden = true;
     }
   } catch (e) {
@@ -342,7 +342,7 @@ if (DEFAULTS.markup || DEFAULTS.buffer || DEFAULTS.fee) $('adv').open = true; //
 $('exportBtn').addEventListener('click', exportXlsx);
 loadRate();
 loadHistory();
-setInterval(loadRate, 60000);
+setInterval(loadRate, 20000);
 setInterval(loadHistory, 600000);
 </script>
 </body>
